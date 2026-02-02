@@ -10,14 +10,25 @@ export default function Home() {
                 Plataforma de decisión agronómica para el manejo de enfermedades de fin de ciclo en soja.
             </p>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-col sm:flex-row">
+                <Link
+                    href="/login"
+                    className="bg-green-700 text-white hover:bg-green-800 px-8 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                >
+                    Iniciar Sesión
+                </Link>
+                <Link
+                    href="/signup"
+                    className="bg-white text-green-700 border border-green-700 hover:bg-green-50 px-8 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                >
+                    Crear Cuenta
+                </Link>
                 <Link
                     href="/dashboard"
-                    className="bg-primary text-white hover:bg-green-800 px-6 py-3 rounded-lg font-medium transition-colors"
+                    className="text-gray-500 hover:text-green-700 px-4 py-3 text-sm font-medium transition-colors"
                 >
-                    Ingresar al Dashboard
+                    (Demo Dashboard)
                 </Link>
-                {/* Placeholder for Auth */}
             </div>
         </main>
     );
