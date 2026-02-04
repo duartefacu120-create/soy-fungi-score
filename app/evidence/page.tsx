@@ -27,21 +27,21 @@ export default function EvidencePage() {
                         </p>
                         <div className="grid md:grid-cols-3 gap-6 pt-4">
                             <div className="p-4 rounded-xl bg-green-50 border border-green-100">
-                                <div className="text-green-800 font-bold mb-1">0 - 24 PUNTOS</div>
+                                <div className="text-green-800 font-bold mb-1">0 - 22 PUNTOS</div>
                                 <div className="text-green-600 font-medium text-sm flex items-center gap-1">
                                     <CheckCircle2 className="h-4 w-4" /> No Aplicar
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">Nivel de riesgo bajo. Las condiciones actuales no justifican la inversión en fungicida.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-100">
-                                <div className="text-yellow-800 font-bold mb-1">25 - 29 PUNTOS</div>
+                                <div className="text-yellow-800 font-bold mb-1">23 - 32 PUNTOS</div>
                                 <div className="text-yellow-600 font-medium text-sm flex items-center gap-1">
-                                    <AlertTriangle className="h-4 w-4" /> Monitorear
+                                    <AlertTriangle className="h-4 w-4" /> Monitorear y decidir con pronóstico
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">Punto crítico. Se recomienda revisar pronósticos climáticos y evolución de síntomas.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-red-50 border border-red-100">
-                                <div className="text-red-800 font-bold mb-1">30+ PUNTOS</div>
+                                <div className="text-red-800 font-bold mb-1">33+ PUNTOS</div>
                                 <div className="text-red-600 font-medium text-sm flex items-center gap-1">
                                     <XCircle className="h-4 w-4" /> Aplicar
                                 </div>
