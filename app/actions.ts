@@ -98,14 +98,57 @@ export async function forgotPassword(formData: FormData) {
         where: { email }
     });
 
-    // We don't want to reveal if a user exists or not for security
     if (user) {
-        // In a real app, you would:
-        // 1. Generate a secure token
-        // 2. Save it in the database with an expiration date
-        // 3. Send an email with a link like /reset-password?token=XYZ
-        console.log(`[SIMULATION] Sending password reset email to: ${email}`);
+        const crypto = require("crypto");
+        const token = crypto.randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 3600000); // 1 hour
+
+        await prisma.profile.update({
+            where: { id: user.id },
+            data: {
+                reset_token: token,
+                reset_expires: expires
+            }
+        });
+
+        const { sendPasswordResetEmail } = require("@/lib/mail");
+        await sendPasswordResetEmail(email, token);
     }
+
+    // Always return success for security
+    return { success: true };
+}
+
+export async function resetPassword(formData: FormData) {
+    const token = formData.get("token") as string;
+    const password = formData.get("password") as string;
+
+    if (!token || !password) {
+        return { error: "Token y contraseña son requeridos." };
+    }
+
+    const user = await prisma.profile.findFirst({
+        where: {
+            reset_token: token,
+            reset_expires: { gt: new Date() }
+        }
+    });
+
+    if (!user) {
+        return { error: "El enlace es inválido o ha expirado." };
+    }
+
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.profile.update({
+        where: { id: user.id },
+        data: {
+            password: hashedPassword,
+            reset_token: null,
+            reset_expires: null
+        }
+    });
 
     return { success: true };
 }
