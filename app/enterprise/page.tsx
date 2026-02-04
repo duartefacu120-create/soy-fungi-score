@@ -7,18 +7,27 @@ import { cn } from "@/lib/utils";
 export default async function EnterpriseDashboard() {
     const stats = await getEnterpriseStats();
 
-    if (!stats) return null;
+    if (!stats) return (
+        <DashboardLayout>
+            <div className="p-8 text-center text-gray-500 font-medium">No hay datos suficientes para mostrar estadísticas.</div>
+        </DashboardLayout>
+    );
 
     const {
-        totalAssessments,
-        totalLots,
-        totalHectares,
-        applyHectares,
-        recommendationStats,
-        memberCount
+        totalAssessments = 0,
+        totalLots = 0,
+        totalHectares = 0,
+        applyHectares = 0,
+        recommendationStats = [],
+        memberCount = 0
     } = stats;
 
-    const findCount = (type: string) => recommendationStats.find(s => s.recommendation_result.includes(type))?._count.id || 0;
+    const findCount = (type: string) => {
+        if (!recommendationStats) return 0;
+        return recommendationStats.find(s =>
+            s && s.recommendation_result && s.recommendation_result.includes(type)
+        )?._count?.id || 0;
+    };
 
     const applyCount = findCount("Aplicar");
     const monitorCount = findCount("Monitorear");

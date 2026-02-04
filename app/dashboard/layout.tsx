@@ -1,4 +1,6 @@
 import Sidebar from "@/components/layout/Sidebar";
+import SuccessAlert from "@/components/SuccessAlert";
+import { Suspense } from "react";
 
 export default function DashboardLayout({
     children,
@@ -10,6 +12,9 @@ export default function DashboardLayout({
             <Sidebar />
             <main className="pl-64">
                 <div className="container mx-auto p-8">
+                    <Suspense fallback={null}>
+                        <SuccessAlert />
+                    </Suspense>
                     {children}
                 </div>
             </main>

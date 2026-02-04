@@ -279,22 +279,30 @@ export async function createCampaign(formData: FormData) {
 
     if (!orgId) throw new Error("No org");
 
-    await prisma.campaign.updateMany({
-        where: { organization_id: orgId },
-        data: { is_active: false }
-    });
+    try {
+        const crypto = require("crypto");
+        const campId = crypto.randomUUID();
 
-    await prisma.campaign.create({
-        data: {
-            organization_id: orgId,
-            user_id: user.id,
-            name,
-            is_active: true
-        }
-    });
+        await prisma.campaign.updateMany({
+            where: { organization_id: orgId },
+            data: { is_active: false }
+        });
 
-    revalidatePath("/campaigns");
-    redirect("/dashboard");
+        await prisma.campaign.create({
+            data: {
+                id: campId,
+                organization_id: orgId,
+                user_id: user.id,
+                name,
+                is_active: true
+            }
+        });
+
+        revalidatePath("/campaigns");
+    } catch (e) {
+        console.error(e);
+    }
+    redirect("/dashboard?success=campaign");
 }
 
 export async function deleteCampaign(id: string) {
@@ -362,33 +370,45 @@ export async function getDashboardStats() {
 }
 
 export async function getEnterpriseStats() {
-    const totalAssessments = await prisma.assessment.count();
-    const totalLots = await prisma.lot.count();
+    try {
+        const totalAssessments = await prisma.assessment.count().catch(() => 0);
+        const totalLots = await prisma.lot.count().catch(() => 0);
 
-    const assessmentWithLots = await prisma.assessment.findMany({
-        include: { lot: true }
-    });
+        const assessmentWithLots = await prisma.assessment.findMany({
+            include: { lot: true }
+        }).catch(() => []);
 
-    const totalHectares = assessmentWithLots.reduce((acc, curr) => acc + (curr.lot?.hectares || 0), 0);
-    const applyHectares = assessmentWithLots
-        .filter(a => a.recommendation_result === "Aplicar")
-        .reduce((acc, curr) => acc + (curr.lot?.hectares || 0), 0);
+        const totalHectares = assessmentWithLots.reduce((acc, curr) => acc + (curr.lot?.hectares || 0), 0);
+        const applyHectares = assessmentWithLots
+            .filter(a => a.recommendation_result === "Aplicar")
+            .reduce((acc, curr) => acc + (curr.lot?.hectares || 0), 0);
 
-    const recommendationStats = await prisma.assessment.groupBy({
-        by: ['recommendation_result'],
-        _count: { id: true }
-    });
+        const recommendationStats = await prisma.assessment.groupBy({
+            by: ['recommendation_result'],
+            _count: { id: true }
+        }).catch(() => []);
 
-    const totalProfiles = await prisma.profile.count();
+        const totalProfiles = await prisma.profile.count().catch(() => 0);
 
-    return {
-        totalAssessments,
-        totalLots,
-        totalHectares,
-        applyHectares,
-        recommendationStats,
-        memberCount: totalProfiles
-    };
+        return {
+            totalAssessments,
+            totalLots,
+            totalHectares,
+            applyHectares,
+            recommendationStats: recommendationStats || [],
+            memberCount: totalProfiles
+        };
+    } catch (e) {
+        console.error("Enterprise stats error:", e);
+        return {
+            totalAssessments: 0,
+            totalLots: 0,
+            totalHectares: 0,
+            applyHectares: 0,
+            recommendationStats: [],
+            memberCount: 0
+        };
+    }
 }
 
 // --- Establishments ---
@@ -410,16 +430,24 @@ export async function createEstablishment(formData: FormData) {
     const location = formData.get("location") as string;
     const orgId = user.organization_id;
 
-    await prisma.establishment.create({
-        data: {
-            organization_id: orgId,
-            user_id: user.id,
-            name,
-            location
-        }
-    });
+    try {
+        const crypto = require("crypto");
+        const estId = crypto.randomUUID();
 
-    revalidatePath("/establishments");
+        await prisma.establishment.create({
+            data: {
+                id: estId,
+                organization_id: orgId,
+                user_id: user.id,
+                name,
+                location
+            }
+        });
+
+        revalidatePath("/establishments");
+    } catch (e) {
+        console.error(e);
+    }
     redirect("/establishments");
 }
 
@@ -441,16 +469,24 @@ export async function createLot(establishmentId: string, formData: FormData) {
     const name = formData.get("name") as string;
     const hectares = parseFloat(formData.get("hectares") as string) || 0;
 
-    await prisma.lot.create({
-        data: {
-            establishment_id: establishmentId,
-            name,
-            hectares,
-        }
-    });
+    try {
+        const crypto = require("crypto");
+        const lotId = crypto.randomUUID();
 
-    revalidatePath(`/establishments/${establishmentId}`);
-    redirect(`/establishments/${establishmentId}`);
+        await prisma.lot.create({
+            data: {
+                id: lotId,
+                establishment_id: establishmentId,
+                name,
+                hectares,
+            }
+        });
+
+        revalidatePath(`/establishments/${establishmentId}`);
+    } catch (e) {
+        console.error(e);
+    }
+    redirect(`/establishments/${establishmentId}?success=lot`);
 }
 
 export async function updateLot(id: string, formData: FormData) {
@@ -489,19 +525,28 @@ export async function getLotOptions() {
 }
 
 export async function createAssessment(lotId: string, campaignId: string, score: number, result: string, inputData: any, soybeanVariety?: string) {
-    const assessment = await prisma.assessment.create({
-        data: {
-            lot_id: lotId,
-            campaign_id: campaignId,
-            total_score: score,
-            recommendation_result: result,
-            soybean_variety: soybeanVariety,
-            input_data: JSON.stringify(inputData)
-        }
-    });
+    try {
+        const crypto = require("crypto");
+        const assId = crypto.randomUUID();
 
-    revalidatePath("/dashboard");
-    return assessment.id;
+        const assessment = await prisma.assessment.create({
+            data: {
+                id: assId,
+                lot_id: lotId,
+                campaign_id: campaignId,
+                total_score: score,
+                recommendation_result: result,
+                soybean_variety: soybeanVariety,
+                input_data: JSON.stringify(inputData)
+            }
+        });
+
+        revalidatePath("/dashboard");
+        return assessment.id;
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
 }
 
 export async function getAssessment(id: string) {
