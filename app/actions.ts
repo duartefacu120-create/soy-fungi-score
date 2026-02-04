@@ -9,6 +9,11 @@ import { getUserSession, setUserSession, clearUserSession } from "@/lib/auth";
 
 export async function login(formData: FormData) {
     const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+        return { error: "Email y contraseña son requeridos." };
+    }
 
     const user = await prisma.profile.findUnique({
         where: { email },
@@ -16,7 +21,15 @@ export async function login(formData: FormData) {
     });
 
     if (!user) {
-        return signup(formData);
+        return { error: "Usuario no encontrado o contraseña incorrecta." };
+    }
+
+    // Verify password
+    const bcrypt = require("bcryptjs");
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+        return { error: "Usuario no encontrado o contraseña incorrecta." };
     }
 
     await setUserSession(email);
@@ -25,40 +38,76 @@ export async function login(formData: FormData) {
 
 export async function signup(formData: FormData) {
     const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
     const companyName = (formData.get("company_name") as string) || email.split("@")[0];
+
+    if (!email || !password) {
+        return { error: "Email y contraseña son requeridos." };
+    }
 
     const existingUser = await prisma.profile.findUnique({
         where: { email },
     });
 
     if (existingUser) {
-        throw new Error("El usuario ya existe.");
+        return { error: "El usuario ya existe." };
     }
 
-    const organization = await prisma.organization.create({
-        data: { name: companyName }
-    });
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const profile = await prisma.profile.create({
-        data: {
-            email,
-            organization_id: organization.id
-        },
-    });
+    try {
+        const organization = await prisma.organization.create({
+            data: { name: companyName }
+        });
 
-    // Set as owner
-    await prisma.organization.update({
-        where: { id: organization.id },
-        data: { owner_id: profile.id }
-    });
+        const profile = await prisma.profile.create({
+            data: {
+                email,
+                password: hashedPassword,
+                organization_id: organization.id
+            },
+        });
 
-    await setUserSession(email);
-    redirect("/campaigns/new");
+        // Set as owner
+        await prisma.organization.update({
+            where: { id: organization.id },
+            data: { owner_id: profile.id }
+        });
+
+        await setUserSession(email);
+        redirect("/campaigns/new");
+    } catch (e: any) {
+        return { error: "Error al crear la cuenta. Intente nuevamente." };
+    }
 }
 
 export async function logout() {
     await clearUserSession();
     redirect("/login");
+}
+
+export async function forgotPassword(formData: FormData) {
+    const email = formData.get("email") as string;
+
+    if (!email) {
+        return { error: "El email es requerido." };
+    }
+
+    const user = await prisma.profile.findUnique({
+        where: { email }
+    });
+
+    // We don't want to reveal if a user exists or not for security
+    if (user) {
+        // In a real app, you would:
+        // 1. Generate a secure token
+        // 2. Save it in the database with an expiration date
+        // 3. Send an email with a link like /reset-password?token=XYZ
+        console.log(`[SIMULATION] Sending password reset email to: ${email}`);
+    }
+
+    return { success: true };
 }
 
 export async function deleteAccount() {
