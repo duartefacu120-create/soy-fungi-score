@@ -40,20 +40,29 @@ export async function signup(formData: FormData) {
     }
 
     try {
+        const { v4: uuidv4 } = require("uuid");
+        const orgId = uuidv4();
+        const profileId = uuidv4();
+
         const organization = await prisma.organization.create({
-            data: { name: companyName }
+            data: {
+                id: orgId,
+                name: companyName
+            }
         });
 
         await prisma.profile.create({
             data: {
+                id: profileId,
                 email,
                 organization_id: organization.id
             },
         });
 
         await setUserSession(email);
-    } catch (e) {
-        return { error: "Error al crear cuenta." };
+    } catch (e: any) {
+        console.error("Signup error:", e);
+        return { error: `Error: ${e.message || "Error al crear cuenta"}` };
     }
 
     redirect("/campaigns/new");
