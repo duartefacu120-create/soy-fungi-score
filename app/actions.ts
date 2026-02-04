@@ -9,77 +9,51 @@ import { getUserSession, setUserSession, clearUserSession } from "@/lib/auth";
 
 export async function login(formData: FormData) {
     const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
 
-    if (!email || !password) {
-        return { error: "Email y contraseña son requeridos." };
+    if (!email) {
+        return { error: "El email es requerido." };
     }
 
-    const user = await prisma.profile.findUnique({
-        where: { email },
-        include: { organization: true }
-    });
+    try {
+        const user = await prisma.profile.findUnique({
+            where: { email },
+        });
 
-    if (!user) {
-        return { error: "Usuario no encontrado o contraseña incorrecta." };
+        if (!user) {
+            return { error: "Usuario no encontrado." };
+        }
+
+        await setUserSession(email);
+    } catch (e) {
+        return { error: "Error de conexión. Reintente." };
     }
 
-    // Verify password
-    const bcrypt = require("bcryptjs");
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-        return { error: "Usuario no encontrado o contraseña incorrecta." };
-    }
-
-    await setUserSession(email);
     redirect("/dashboard");
 }
 
 export async function signup(formData: FormData) {
     const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
     const companyName = (formData.get("company_name") as string) || email.split("@")[0];
 
-    if (!email || !password) {
-        return { error: "Email y contraseña son requeridos." };
+    if (!email) {
+        return { error: "El email es requerido." };
     }
 
     try {
-        const existingUser = await prisma.profile.findUnique({
-            where: { email },
-        });
-
-        if (existingUser) {
-            return { error: "El usuario ya existe." };
-        }
-
-        const bcrypt = require("bcryptjs");
-        const hashedPassword = await bcrypt.hash(password, 10);
-
         const organization = await prisma.organization.create({
             data: { name: companyName }
         });
 
-        const profile = await prisma.profile.create({
+        await prisma.profile.create({
             data: {
                 email,
-                password: hashedPassword,
                 organization_id: organization.id
             },
         });
 
-        // Set as owner
-        await prisma.organization.update({
-            where: { id: organization.id },
-            data: { owner_id: profile.id }
-        });
-
         await setUserSession(email);
-        // Successful signup redirect handled below
-    } catch (e: any) {
-        console.error("Signup error:", e);
-        return { error: "Error de conexión con la base de datos. Verifica tu conexión." };
+    } catch (e) {
+        return { error: "Error al crear cuenta." };
     }
 
     redirect("/campaigns/new");
