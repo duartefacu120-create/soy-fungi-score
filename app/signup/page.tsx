@@ -12,12 +12,6 @@ export default function SignupPage() {
         setIsLoading(true);
         setError(null);
 
-        const password = formData.get("password") as string;
-        if (password.length < 6) {
-            setError("La contraseña debe tener al menos 6 caracteres.");
-            setIsLoading(false);
-            return;
-        }
 
         const result = await signup(formData);
         if (result && result.error) {
@@ -64,18 +58,6 @@ export default function SignupPage() {
                                 placeholder="Opcional"
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
                             />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">Mínimo 6 caracteres</p>
                         </div>
                     </div>
 

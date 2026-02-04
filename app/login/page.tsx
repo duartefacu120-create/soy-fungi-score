@@ -47,25 +47,6 @@ export default function LoginPage() {
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
                             />
                         </div>
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-                                <Link
-                                    href="/forgot-password"
-                                    className="text-xs font-medium text-green-700 hover:text-green-600"
-                                >
-                                    ¿Olvidaste tu contraseña?
-                                </Link>
-                            </div>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
-                            />
-                        </div>
                     </div>
 
                     <div>
