@@ -13,6 +13,7 @@ import {
 import { Users, Mail, UserPlus, CheckCircle2, Building, Clock, Check, Send, LogOut, Trash2, AlertTriangle } from "lucide-react";
 import DeleteAccountForm from "@/components/team/DeleteAccountForm";
 import MemberActions from "@/components/team/MemberActions";
+import CancelInvitationButton from "@/components/team/CancelInvitationButton";
 import { cn } from "@/lib/utils";
 
 export default async function TeamPage({ searchParams }: { searchParams: { message?: string } }) {
@@ -114,6 +115,9 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                                                         Esperando respuesta
                                                     </span>
                                                 </div>
+                                                {isOwner && (
+                                                    <CancelInvitationButton invitationId={inv.id} />
+                                                )}
                                             </div>
                                         ))
                                     )}

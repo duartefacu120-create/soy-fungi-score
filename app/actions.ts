@@ -413,6 +413,37 @@ export async function updateAssessment(
     revalidatePath(`/assessments/${id}`);
 }
 
+export async function cancelInvitation(invitationId: string) {
+    try {
+        const user = await getCurrentUser();
+        if (!user.organization_id) throw new Error("No tienes organización.");
+
+        const invitation = await prisma.invitation.findUnique({
+            where: { id: invitationId }
+        });
+
+        if (!invitation) throw new Error("Invitación no encontrada.");
+        if (invitation.organization_id !== user.organization_id) {
+            throw new Error("No tienes permiso para cancelar esta invitación.");
+        }
+
+        await prisma.invitation.delete({
+            where: { id: invitationId }
+        });
+
+        revalidatePath("/team");
+        return { success: true, message: "Invitación cancelada correctamente." };
+    } catch (e: any) {
+        console.error("cancelInvitation error:", e);
+        return { success: false, message: e.message };
+    }
+}
+
+export async function handleCancelInvitationAction(invitationId: string) {
+    const result = await cancelInvitation(invitationId);
+    redirect(`/team?message=${encodeURIComponent(result.message)}`);
+}
+
 // --- Campaigns ---
 
 export async function getCampaigns() {
