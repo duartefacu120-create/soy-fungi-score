@@ -1,3 +1,4 @@
+// Production deployment trigger
 generator client {
   provider = "prisma-client-js"
 }
