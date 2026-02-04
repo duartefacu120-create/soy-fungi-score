@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import DashboardLayout from "@/app/dashboard/layout";
 import { getCurrentUser, getOrgMembers, getInvitations, getSentInvitations, inviteUser, acceptInvitation, updateOrganizationName, leaveOrganization, removeMemberFromOrganization, deleteAccount } from "@/app/actions";
 import { Users, Mail, UserPlus, CheckCircle2, Building, Clock, Edit2, Check, Send, LogOut, Trash2 } from "lucide-react";

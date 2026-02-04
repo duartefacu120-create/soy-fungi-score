@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import DashboardLayout from "@/app/dashboard/layout";
 import { getEnterpriseStats } from "@/app/actions";
 import { PieChart, TrendingUp, BarChart, Users, Sprout, Globe, Activity, MapPin } from "lucide-react";
