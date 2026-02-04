@@ -33,7 +33,7 @@ export default async function EnterpriseDashboard() {
     const monitorCount = findCount("Monitorear");
     const noApplyCount = findCount("No Aplicar");
 
-    const surfaceApplyPercent = totalHectares > 0 ? (applyHectares / totalHectares) * 100 : 0;
+    const surfaceApplyPercent = (totalHectares && totalHectares > 0) ? (applyHectares / totalHectares) * 100 : 0;
 
     return (
         <DashboardLayout>
@@ -189,7 +189,7 @@ export default async function EnterpriseDashboard() {
                                     <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
                                         <div className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Carga de Evaluación</div>
                                         <div className="text-2xl font-black text-green-400">
-                                            {(totalAssessments / Math.max(memberCount, 1)).toFixed(1)}
+                                            {memberCount > 0 ? (totalAssessments / memberCount).toFixed(1) : "0.0"}
                                         </div>
                                         <div className="text-[10px] text-gray-500 mt-2">Promedio por usuario</div>
                                     </div>
