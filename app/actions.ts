@@ -296,6 +296,50 @@ export async function leaveOrganization() {
     redirect("/campaigns/new"); // Redirect to create a new org
 }
 
+export async function transferOwnership(newOwnerId: string) {
+    try {
+        const user = await getCurrentUser();
+        if (!user.organization_id) throw new Error("No tienes organización.");
+
+        const organization = await prisma.organization.findUnique({
+            where: { id: user.organization_id }
+        });
+
+        if (organization?.owner_id !== user.id) {
+            throw new Error("Solo el dueño actual puede transferir la propiedad.");
+        }
+
+        if (newOwnerId === user.id) {
+            throw new Error("Ya eres el dueño de esta empresa.");
+        }
+
+        // Verify new owner is a member
+        const newOwner = await prisma.profile.findFirst({
+            where: { id: newOwnerId, organization_id: user.organization_id }
+        });
+
+        if (!newOwner) {
+            throw new Error("El usuario seleccionado debe ser miembro de la empresa.");
+        }
+
+        await prisma.organization.update({
+            where: { id: user.organization_id },
+            data: { owner_id: newOwnerId }
+        });
+
+        revalidatePath("/team");
+        return { success: true, message: "Propiedad transferida correctamente." };
+    } catch (e: any) {
+        console.error("transferOwnership error:", e);
+        return { success: false, message: e.message };
+    }
+}
+
+export async function handleTransferOwnershipAction(memberId: string) {
+    const result = await transferOwnership(memberId);
+    redirect(`/team?message=${encodeURIComponent(result.message)}`);
+}
+
 export async function getOrgMembers() {
     try {
         const user = await getCurrentUser();
