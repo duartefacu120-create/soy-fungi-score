@@ -48,7 +48,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                         <div>
                             <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
                                 <Users className="h-8 w-8 text-green-600" />
-                                Mi Empresa
+                                Mi Grupo/Empresa
                             </h1>
                             <p className="text-gray-500 font-medium">Gestión de equipo e identidad corporativa.</p>
                         </div>

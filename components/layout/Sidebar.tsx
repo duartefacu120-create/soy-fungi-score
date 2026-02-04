@@ -23,7 +23,7 @@ const navItems = [
     { href: "/campaigns", label: "Campañas", icon: Calendar },
     { href: "/establishments", label: "Establecimientos", icon: HomeIcon },
     { href: "/enterprise", label: "Panel Empresarial", icon: Building2 },
-    { href: "/team", label: "Mi Empresa", icon: Users },
+    { href: "/team", label: "Mi Grupo/Empresa", icon: Users },
     { href: "/evidence", label: "Evidencia Científica", icon: BookOpen },
 ];
 
