@@ -24,8 +24,9 @@ export async function login(formData: FormData) {
         }
 
         await setUserSession(email);
-    } catch (e) {
-        return { error: "Error de conexión. Reintente." };
+    } catch (e: any) {
+        console.error("Login error:", e);
+        return { error: `Error de conexión: ${e.message || "Reintente"}` };
     }
 
     redirect("/dashboard");
@@ -40,9 +41,9 @@ export async function signup(formData: FormData) {
     }
 
     try {
-        const { v4: uuidv4 } = require("uuid");
-        const orgId = uuidv4();
-        const profileId = uuidv4();
+        const crypto = require("crypto");
+        const orgId = crypto.randomUUID();
+        const profileId = crypto.randomUUID();
 
         const organization = await prisma.organization.create({
             data: {
