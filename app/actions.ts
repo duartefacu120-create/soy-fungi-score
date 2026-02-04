@@ -392,6 +392,27 @@ export async function removeMemberAction(memberId: string) {
     }
 }
 
+export async function updateAssessment(
+    id: string,
+    score: number,
+    recommendation: string,
+    inputs: any,
+    variety: string
+) {
+    await prisma.assessment.update({
+        where: { id },
+        data: {
+            total_score: score,
+            recommendation_result: recommendation,
+            soybean_variety: variety,
+            input_data: JSON.stringify(inputs)
+        }
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/assessments/${id}`);
+}
+
 // --- Campaigns ---
 
 export async function getCampaigns() {

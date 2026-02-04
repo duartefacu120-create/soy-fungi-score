@@ -62,8 +62,17 @@ export default async function AssessmentDetailsPage({ params }: { params: { id: 
                             )}
                         </div>
                     </div>
-                    <div className={cn("px-4 py-2 rounded-full font-bold text-lg border", statusColor, borderColor)}>
-                        {assessment.recommendation_result}
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={`/assessments/${assessment.id}/edit`}
+                            className="bg-white border text-gray-600 px-4 py-2 rounded-full font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                            Editar
+                        </Link>
+                        <div className={cn("px-4 py-2 rounded-full font-bold text-lg border", statusColor, borderColor)}>
+                            {assessment.recommendation_result}
+                        </div>
                     </div>
                 </div>
             </div>
