@@ -1,10 +1,18 @@
 export const dynamic = "force-dynamic";
 import DashboardLayout from "@/app/dashboard/layout";
-import { getCurrentUser, getOrgMembers, getInvitations, getSentInvitations, inviteUser, acceptInvitation, updateOrganizationName, leaveOrganization, removeMemberFromOrganization, deleteAccount } from "@/app/actions";
+import {
+    getCurrentUser,
+    getOrgMembers,
+    getInvitations,
+    getSentInvitations,
+    handleInviteAction,
+    handleAcceptAction,
+    handleUpdateNameAction,
+    handleLeaveAction
+} from "@/app/actions";
 import { Users, Mail, UserPlus, CheckCircle2, Building, Clock, Check, Send, LogOut, Trash2 } from "lucide-react";
 import DeleteAccountForm from "@/components/team/DeleteAccountForm";
 import RemoveMemberButton from "@/components/team/RemoveMemberButton";
-import { redirect } from "next/navigation";
 
 export default async function TeamPage({ searchParams }: { searchParams: { message?: string } }) {
     try {
@@ -12,37 +20,6 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
         const members = (await getOrgMembers()) as any[];
         const pendingInvitations = (await getInvitations()) as any[];
         const sentInvitations = (await getSentInvitations()) as any[];
-
-        const handleInvite = async (formData: FormData) => {
-            "use server";
-            const email = formData.get("email") as string;
-            const result = await inviteUser(email);
-            redirect(`/team?message=${encodeURIComponent(result.message)}`);
-        }
-
-        const handleAccept = async (formData: FormData) => {
-            "use server";
-            const id = formData.get("invitationId") as string;
-            await acceptInvitation(id);
-        }
-
-        const handleUpdateName = async (formData: FormData) => {
-            "use server";
-            const newName = formData.get("companyName") as string;
-            if (newName) {
-                await updateOrganizationName(newName);
-                redirect(`/team?message=Nombre de la empresa actualizado.`);
-            }
-        }
-
-        const handleLeave = async () => {
-            "use server";
-            try {
-                await leaveOrganization();
-            } catch (e: any) {
-                redirect(`/team?message=${encodeURIComponent(e.message)}`);
-            }
-        }
 
         const isOwner = user.organization?.owner_id === user.id;
 
@@ -52,7 +29,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                     {searchParams.message && (
                         <div className="bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
                             <CheckCircle2 className="h-5 w-5" />
-                            {searchParams.message}
+                            {decodeURIComponent(searchParams.message)}
                         </div>
                     )}
 
@@ -65,7 +42,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                             <p className="text-gray-500">Gestiona los miembros de tu equipo y la identidad corporativa.</p>
                         </div>
 
-                        <form action={handleUpdateName} className="flex items-center gap-2 bg-white p-1 pr-3 rounded-xl border shadow-sm group focus-within:ring-2 focus-within:ring-green-500 transition-all">
+                        <form action={handleUpdateNameAction} className="flex items-center gap-2 bg-white p-1 pr-3 rounded-xl border shadow-sm group focus-within:ring-2 focus-within:ring-green-500 transition-all">
                             <div className="bg-green-50 p-2 rounded-lg ml-1">
                                 <Building className="h-5 w-5 text-green-700" />
                             </div>
@@ -90,7 +67,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                                     <UserPlus className="h-4 w-4" />
                                     Invitar Miembro
                                 </h2>
-                                <form action={handleInvite} className="space-y-3">
+                                <form action={handleInviteAction} className="space-y-3">
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Email del colaborador</label>
                                         <input
@@ -136,7 +113,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                                 <section className="bg-red-50 rounded-2xl border border-red-100 p-6">
                                     <h2 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-2">Peligro</h2>
                                     <p className="text-xs text-red-600 mb-4 font-medium">Si abandonas la empresa perderás el acceso a todos los datos compartidos.</p>
-                                    <form action={handleLeave}>
+                                    <form action={handleLeaveAction}>
                                         <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm">
                                             <LogOut className="h-4 w-4" />
                                             Abandonar Empresa
@@ -180,7 +157,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                                                 <p className="text-sm mb-3">
                                                     Te han invitado a <span className="font-bold underline">{inv.organization?.name}</span>
                                                 </p>
-                                                <form action={handleAccept}>
+                                                <form action={handleAcceptAction}>
                                                     <input type="hidden" name="invitationId" value={inv.id} />
                                                     <button className="w-full bg-white text-green-700 font-bold rounded-lg py-2 hover:bg-green-50 transition-colors">
                                                         Aceptar y Cambiar
@@ -235,7 +212,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
                                                         </span>
                                                     )}
                                                     <div className="flex items-center gap-4">
-                                                        {isOwner && member.id !== user.id && member.id !== user.organization?.owner_id && (
+                                                        {isOwner && member.id !== user.id && (
                                                             <RemoveMemberButton memberId={member.id} />
                                                         )}
                                                         <div className="flex items-center gap-2 text-green-600">

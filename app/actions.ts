@@ -152,24 +152,37 @@ export async function getCurrentCampaignId(orgId: string) {
 // --- Teams & Invitations ---
 
 export async function inviteUser(email: string) {
-    const user = await getCurrentUser();
-    if (!user.organization_id) throw new Error("No tienes organización.");
+    try {
+        const user = await getCurrentUser();
+        if (!user.organization_id) throw new Error("No tienes organización vinculada.");
 
-    const existingInvite = await prisma.invitation.findFirst({
-        where: { organization_id: user.organization_id, email, status: "PENDING" }
-    });
-    if (existingInvite) return { success: false, message: "Ya existe una invitación pendiente." };
+        // Check if user already in the org
+        const existingMember = await prisma.profile.findFirst({
+            where: { email, organization_id: user.organization_id }
+        });
+        if (existingMember) return { success: false, message: "Este usuario ya es miembro de tu empresa." };
 
-    await prisma.invitation.create({
-        data: {
-            organization_id: user.organization_id,
-            email,
-            status: "PENDING"
-        }
-    });
+        const existingInvite = await prisma.invitation.findFirst({
+            where: { organization_id: user.organization_id, email, status: "PENDING" }
+        });
+        if (existingInvite) return { success: false, message: "Ya existe una invitación pendiente para este email." };
 
-    revalidatePath("/team");
-    return { success: true, message: "Invitación enviada correctamente." };
+        const crypto = require("crypto");
+        await prisma.invitation.create({
+            data: {
+                id: crypto.randomUUID(),
+                organization_id: user.organization_id,
+                email,
+                status: "PENDING"
+            }
+        });
+
+        revalidatePath("/team");
+        return { success: true, message: "Invitación enviada correctamente." };
+    } catch (e: any) {
+        console.error("inviteUser error:", e);
+        return { success: false, message: `Error al enviar invitación: ${e.message}` };
+    }
 }
 
 export async function getSentInvitations() {
@@ -293,6 +306,43 @@ export async function getOrgMembers() {
     } catch (e) {
         console.error("getOrgMembers error:", e);
         return [];
+    }
+}
+
+export async function handleInviteAction(formData: FormData) {
+    const email = formData.get("email") as string;
+    const result = await inviteUser(email);
+    redirect(`/team?message=${encodeURIComponent(result.message)}`);
+}
+
+export async function handleAcceptAction(formData: FormData) {
+    const id = formData.get("invitationId") as string;
+    await acceptInvitation(id);
+    // acceptInvitation already redirects
+}
+
+export async function handleUpdateNameAction(formData: FormData) {
+    const newName = formData.get("companyName") as string;
+    if (newName) {
+        await updateOrganizationName(newName);
+        redirect(`/team?message=Nombre de la empresa actualizado.`);
+    }
+}
+
+export async function handleLeaveAction() {
+    try {
+        await leaveOrganization();
+    } catch (e: any) {
+        redirect(`/team?message=${encodeURIComponent(e.message)}`);
+    }
+}
+
+export async function removeMemberAction(memberId: string) {
+    try {
+        await removeMemberFromOrganization(memberId);
+        redirect(`/team?message=Miembro eliminado correctamente.`);
+    } catch (e: any) {
+        redirect(`/team?message=${encodeURIComponent(e.message)}`);
     }
 }
 
