@@ -49,7 +49,8 @@ export async function signup(formData: FormData) {
         const organization = await prisma.organization.create({
             data: {
                 id: orgId,
-                name: companyName
+                name: companyName,
+                owner_id: profileId
             }
         });
 
