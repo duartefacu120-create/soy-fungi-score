@@ -13,6 +13,7 @@ import {
 import { Users, Mail, UserPlus, CheckCircle2, Building, Clock, Check, Send, LogOut, Trash2 } from "lucide-react";
 import DeleteAccountForm from "@/components/team/DeleteAccountForm";
 import RemoveMemberButton from "@/components/team/RemoveMemberButton";
+import { cn } from "@/lib/utils";
 
 export default async function TeamPage({ searchParams }: { searchParams: { message?: string } }) {
     try {
@@ -27,8 +28,13 @@ export default async function TeamPage({ searchParams }: { searchParams: { messa
             <DashboardLayout>
                 <div className="max-w-5xl mx-auto space-y-8 pb-10">
                     {searchParams.message && (
-                        <div className="bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-                            <CheckCircle2 className="h-5 w-5" />
+                        <div className={cn(
+                            "border px-4 py-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-4",
+                            searchParams.message.toLowerCase().includes("error")
+                                ? "bg-red-50 border-red-200 text-red-800"
+                                : "bg-green-100 border-green-200 text-green-800"
+                        )}>
+                            <CheckCircle2 className={cn("h-5 w-5", searchParams.message.toLowerCase().includes("error") && "text-red-500")} />
                             {decodeURIComponent(searchParams.message)}
                         </div>
                     )}

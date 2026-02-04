@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import crypto from "crypto";
 import { getUserSession, setUserSession, clearUserSession } from "@/lib/auth";
 
 // --- Authentication & Organization ---
@@ -167,10 +168,10 @@ export async function inviteUser(email: string) {
         });
         if (existingInvite) return { success: false, message: "Ya existe una invitación pendiente para este email." };
 
-        const crypto = require("crypto");
+        const invitationId = crypto.randomUUID();
         await prisma.invitation.create({
             data: {
-                id: crypto.randomUUID(),
+                id: invitationId,
                 organization_id: user.organization_id,
                 email,
                 status: "PENDING"
