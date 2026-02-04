@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import DashboardLayout from "@/app/dashboard/layout";
+import { getCampaigns } from "@/app/actions";
+import CampaignList from "@/components/campaigns/CampaignList";
 
-export default function CampaignsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function CampaignsPage() {
+    const campaigns = await getCampaigns();
+
     return (
         <DashboardLayout>
             <div className="flex justify-between items-center mb-8">
@@ -13,9 +19,7 @@ export default function CampaignsPage() {
                 </Link>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border p-6 text-center text-gray-500">
-                <p>No hay campañas registradas (Mock).</p>
-            </div>
+            <CampaignList campaigns={campaigns} />
         </DashboardLayout>
     );
 }

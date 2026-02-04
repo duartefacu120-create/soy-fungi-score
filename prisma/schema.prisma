@@ -3,40 +3,67 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Profile {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  company_name String?
-  created_at   DateTime  @default(now())
+  id              String   @id @default(uuid())
+  email           String   @unique
+  organization_id String?
+  created_at      DateTime @default(now())
   
-  campaigns    Campaign[]
+  organization    Organization? @relation(fields: [organization_id], references: [id])
+  campaigns       Campaign[]
+  establishments  Establishment[]
+}
+
+model Organization {
+  id         String   @id @default(uuid())
+  name       String
+  owner_id   String?  // ID of the profile who owns/created the organization
+  created_at DateTime @default(now())
+  
+  members        Profile[]
+  campaigns      Campaign[]
+  establishments Establishment[]
+  invitations    Invitation[]
+}
+
+model Invitation {
+  id              String   @id @default(uuid())
+  organization_id String
+  email           String
+  status          String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  created_at      DateTime @default(now())
+  
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
 }
 
 model Campaign {
-  id         String   @id @default(uuid())
-  user_id    String
-  name       String   // e.g. "2025/2026"
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
+  id              String   @id @default(uuid())
+  user_id         String?  // Creator
+  organization_id String?
+  name            String   // e.g. "2025/2026"
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
 
-  user           Profile         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  establishments Establishment[]
+  user         Profile?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  assessments  Assessment[]
 }
 
 model Establishment {
-  id          String   @id @default(uuid())
-  campaign_id String
-  name        String
-  location    String?
-  created_at  DateTime @default(now())
+  id              String   @id @default(uuid())
+  user_id         String?
+  organization_id String?
+  name            String
+  location        String?
+  created_at      DateTime @default(now())
 
-  campaign Campaign @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
-  lots     Lot[]
+  user         Profile?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  lots         Lot[]
 }
 
 model Lot {
@@ -44,7 +71,6 @@ model Lot {
   establishment_id String
   name             String
   hectares         Float
-  soybean_variety  String?
   planting_date    DateTime?
   created_at       DateTime @default(now())
 
@@ -55,12 +81,15 @@ model Lot {
 model Assessment {
   id                    String   @id @default(uuid())
   lot_id                String
+  campaign_id           String
   date_performed        DateTime @default(now())
   total_score           Float
   recommendation_result String   // e.g. "Aplicar", "No Aplicar"
+  soybean_variety       String?
   
-  // Storing the 10 specific answers as JSON for historical reference
-  input_data            Json
+  // Storing the 10 specific answers as String for historical reference
+  input_data            String
 
-  lot Lot @relation(fields: [lot_id], references: [id], onDelete: Cascade)
+  lot      Lot      @relation(fields: [lot_id], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
 }

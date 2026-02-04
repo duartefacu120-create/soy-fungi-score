@@ -4,13 +4,19 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { calculateScore, type AssessmentInputs, type AssessmentResult } from "@/lib/grading-logic";
 import { cn } from "@/lib/utils";
+import { createAssessment } from "@/app/actions";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
-export default function AssessmentForm({ lotId }: { lotId: string }) {
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<AssessmentInputs>();
+export default function AssessmentForm({ lotId, campaignId }: { lotId: string; campaignId: string }) {
+    const { register, handleSubmit, formState: { errors } } = useForm<AssessmentInputs & { soybeanVariety: string }>();
     const [result, setResult] = useState<AssessmentResult | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const router = useRouter();
 
-    const onSubmit = async (data: AssessmentInputs) => {
-        // Convert string inputs to numbers (HTML select values are strings)
+    const onSubmit = async (data: AssessmentInputs & { soybeanVariety: string }) => {
+        setIsSaving(true);
+        // Convert string inputs to numbers
         const numericData: AssessmentInputs = {
             rainfall: Number(data.rainfall),
             rainIntensity: Number(data.rainIntensity),
@@ -27,8 +33,14 @@ export default function AssessmentForm({ lotId }: { lotId: string }) {
         const calculation = calculateScore(numericData);
         setResult(calculation);
 
-        // TODO: Save to DB via Server Action or API
-        console.log("Saving Assessment:", { lotId, numericData, calculation });
+        try {
+            const id = await createAssessment(lotId, campaignId, calculation.score, calculation.recommendation, numericData, data.soybeanVariety);
+            router.push(`/assessments/${id}`);
+        } catch (error) {
+            console.error("Error saving assessment:", error);
+            setIsSaving(false);
+            alert("Hubo un error al guardar la evaluación.");
+        }
     };
 
     return (
@@ -36,6 +48,17 @@ export default function AssessmentForm({ lotId }: { lotId: string }) {
             <h2 className="text-2xl font-bold mb-6 text-green-900 border-b pb-2">Nueva Evaluación de Fungicida</h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
+                {/* Variety selection */}
+                <div className="form-group pb-4 border-b">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Variedad de Soja</label>
+                    <input
+                        {...register("soybeanVariety")}
+                        className="w-full p-2 border rounded-md"
+                        placeholder="Ej: Nidera 4611"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">La variedad puede variar en el mismo lote según la campaña.</p>
+                </div>
 
                 {/* 1. Rainfall */}
                 <div className="form-group">
@@ -135,24 +158,19 @@ export default function AssessmentForm({ lotId }: { lotId: string }) {
 
                 <button
                     type="submit"
-                    className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg"
+                    disabled={isSaving}
+                    className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors text-lg flex justify-center items-center gap-2"
                 >
-                    Calcular Riesgo
+                    {isSaving ? (
+                        <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Calculando y Guardando...
+                        </>
+                    ) : (
+                        "Calcular Riesgo"
+                    )}
                 </button>
             </form>
-
-            {result && (
-                <div className={cn(
-                    "mt-8 p-6 rounded-lg border-2 text-center animate-in fade-in slide-in-from-bottom-4",
-                    result.color === "green" ? "bg-green-50 border-green-500 text-green-900" :
-                        result.color === "yellow" ? "bg-yellow-50 border-yellow-500 text-yellow-900" :
-                            "bg-red-50 border-red-500 text-red-900"
-                )}>
-                    <div className="text-sm uppercase tracking-wider font-semibold opacity-70 mb-1">Puntaje Total</div>
-                    <div className="text-4xl font-extrabold mb-4">{result.score} pts</div>
-                    <div className="text-2xl font-bold">{result.recommendation}</div>
-                </div>
-            )}
         </div>
     );
 }

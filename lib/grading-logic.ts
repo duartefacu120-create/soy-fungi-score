@@ -83,17 +83,17 @@ export const calculateScore = (inputs: AssessmentInputs): AssessmentResult => {
     score += symptomsPts[inputs.symptoms] || 0;
 
     let recommendation = "";
-    let color: AssessmentResult["color"] = "red";
+    let color: AssessmentResult["color"] = "green";
 
-    if (score >= 33) {
+    if (score >= 30) {
         recommendation = "Aplicar";
-        color = "green";
-    } else if (score >= 23) {
-        recommendation = "Incertidumbre / Revisar Pronóstico";
+        color = "red";
+    } else if (score >= 25) {
+        recommendation = "Monitorear / Revisar Pronóstico";
         color = "yellow";
     } else {
         recommendation = "No Aplicar";
-        color = "red";
+        color = "green";
     }
 
     return { score, recommendation, color };
