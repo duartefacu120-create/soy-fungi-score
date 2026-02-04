@@ -103,6 +103,27 @@ export async function deleteAccount() {
     redirect("/login");
 }
 
+export async function forgotPassword(formData: FormData) {
+    const email = formData.get("email") as string;
+    if (!email) return { error: "El email es requerido." };
+
+    try {
+        const user = await prisma.profile.findUnique({
+            where: { email }
+        });
+
+        if (user) {
+            console.log(`Password reset link requested for: ${email}`);
+            // In a production app, integrate with Resend/Postmark/SendGrid here
+        }
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("ForgotPassword error:", e);
+        return { error: "Error al procesar la solicitud. Intente más tarde." };
+    }
+}
+
 // --- User & Org context ---
 
 export async function getCurrentUser() {
@@ -152,13 +173,18 @@ export async function inviteUser(email: string) {
 }
 
 export async function getSentInvitations() {
-    const user = await getCurrentUser();
-    if (!user.organization_id) return [];
+    try {
+        const user = await getCurrentUser();
+        if (!user.organization_id) return [];
 
-    return await prisma.invitation.findMany({
-        where: { organization_id: user.organization_id, status: "PENDING" },
-        orderBy: { created_at: 'desc' }
-    });
+        return await prisma.invitation.findMany({
+            where: { organization_id: user.organization_id, status: "PENDING" },
+            orderBy: { created_at: 'desc' }
+        });
+    } catch (e) {
+        console.error("getSentInvitations error:", e);
+        return [];
+    }
 }
 
 export async function updateOrganizationName(newName: string) {
@@ -174,13 +200,18 @@ export async function updateOrganizationName(newName: string) {
 }
 
 export async function getInvitations() {
-    const email = await getUserSession();
-    if (!email) return [];
+    try {
+        const email = await getUserSession();
+        if (!email) return [];
 
-    return await prisma.invitation.findMany({
-        where: { email, status: "PENDING" },
-        include: { organization: true }
-    });
+        return await prisma.invitation.findMany({
+            where: { email, status: "PENDING" },
+            include: { organization: true }
+        });
+    } catch (e) {
+        console.error("getInvitations error:", e);
+        return [];
+    }
 }
 
 export async function acceptInvitation(invitationId: string) {
@@ -251,13 +282,18 @@ export async function leaveOrganization() {
 }
 
 export async function getOrgMembers() {
-    const user = await getCurrentUser();
-    if (!user.organization_id) return [];
+    try {
+        const user = await getCurrentUser();
+        if (!user.organization_id) return [];
 
-    return await prisma.profile.findMany({
-        where: { organization_id: user.organization_id },
-        orderBy: { email: 'asc' }
-    });
+        return await prisma.profile.findMany({
+            where: { organization_id: user.organization_id },
+            orderBy: { email: 'asc' }
+        });
+    } catch (e) {
+        console.error("getOrgMembers error:", e);
+        return [];
+    }
 }
 
 // --- Campaigns ---
