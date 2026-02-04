@@ -45,18 +45,18 @@ export async function signup(formData: FormData) {
         return { error: "Email y contraseña son requeridos." };
     }
 
-    const existingUser = await prisma.profile.findUnique({
-        where: { email },
-    });
-
-    if (existingUser) {
-        return { error: "El usuario ya existe." };
-    }
-
-    const bcrypt = require("bcryptjs");
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     try {
+        const existingUser = await prisma.profile.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return { error: "El usuario ya existe." };
+        }
+
+        const bcrypt = require("bcryptjs");
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const organization = await prisma.organization.create({
             data: { name: companyName }
         });
@@ -76,10 +76,13 @@ export async function signup(formData: FormData) {
         });
 
         await setUserSession(email);
-        redirect("/campaigns/new");
+        // Successful signup redirect handled below
     } catch (e: any) {
-        return { error: "Error al crear la cuenta. Intente nuevamente." };
+        console.error("Signup error:", e);
+        return { error: "Error de conexión con la base de datos. Verifica tu conexión." };
     }
+
+    redirect("/campaigns/new");
 }
 
 export async function logout() {
