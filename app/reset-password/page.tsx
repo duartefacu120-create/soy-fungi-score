@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { resetPassword } from "@/app/actions";
 import Link from "next/link";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get("token");
@@ -79,8 +79,8 @@ export default function ResetPasswordPage() {
 
                 {message && (
                     <div className={`rounded-md p-4 text-sm border ${message.type === 'success'
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : 'bg-red-50 text-red-700 border-red-200'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-red-50 text-red-700 border-red-200'
                         }`}>
                         {message.text}
                     </div>
@@ -128,5 +128,20 @@ export default function ResetPasswordPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Cargando...</p>
+                </div>
+            </div>
+        }>
+            <ResetPasswordForm />
+        </Suspense>
     );
 }
