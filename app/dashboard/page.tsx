@@ -11,9 +11,12 @@ export default async function DashboardPage() {
         activeCampaign,
         establishmentCount,
         lotCount,
-        assessmentCount,
         applyCount,
+        hectaresApply,
         noApplyCount,
+        hectaresNoApply,
+        monitorCount,
+        hectaresMonitor,
         recentAssessments
     } = await getDashboardStats();
 
@@ -39,7 +42,32 @@ export default async function DashboardPage() {
             </header>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <StatCard
+                    label="Alerta: Aplicar"
+                    value={applyCount}
+                    hectares={hectaresApply}
+                    icon={AlertCircle}
+                    color="red"
+                    highlight
+                />
+                <StatCard
+                    label="Monitorear"
+                    value={monitorCount}
+                    hectares={hectaresMonitor}
+                    icon={Layers}
+                    color="yellow"
+                />
+                <StatCard
+                    label="Riesgo Bajo / No Aplicar"
+                    value={noApplyCount}
+                    hectares={hectaresNoApply}
+                    icon={CheckCircle2}
+                    color="emerald"
+                />
+            </div>
+
+            <div className="grid gap-4 grid-cols-2">
                 <StatCard
                     label="Establecimientos"
                     value={establishmentCount}
@@ -52,25 +80,12 @@ export default async function DashboardPage() {
                     icon={Layers}
                     color="green"
                 />
-                <StatCard
-                    label="Alerta: Aplicar"
-                    value={applyCount}
-                    icon={AlertCircle}
-                    color="red"
-                    highlight
-                />
-                <StatCard
-                    label="Riesgo Bajo"
-                    value={noApplyCount}
-                    icon={CheckCircle2}
-                    color="emerald"
-                />
             </div>
 
             {/* Recent Activity */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="p-4 lg:p-6 border-b border-gray-50 bg-gray-50/30">
-                    <h2 className="font-bold text-gray-900">Actividad Reciente</h2>
+                    <h2 className="font-bold text-gray-900 font-bold">Actividad Reciente</h2>
                 </div>
                 <div className="p-0 lg:p-6">
                     <RecentAssessments assessments={recentAssessments as any} />
@@ -80,25 +95,34 @@ export default async function DashboardPage() {
     );
 }
 
-function StatCard({ label, value, icon: Icon, color, highlight }: any) {
+function StatCard({ label, value, hectares, icon: Icon, color, highlight }: any) {
     const colors: any = {
         blue: "text-blue-600 bg-blue-50 border-blue-100",
         green: "text-green-600 bg-green-50 border-green-100",
         red: "text-red-700 bg-red-50 border-red-200",
         emerald: "text-emerald-600 bg-emerald-50 border-emerald-100",
+        yellow: "text-yellow-700 bg-yellow-50 border-yellow-200",
     };
 
     return (
         <div className={cn(
             "rounded-3xl border p-5 lg:p-6 shadow-sm flex items-center gap-4 transition-all hover:shadow-md",
-            highlight ? "bg-white border-2" : "bg-white border-gray-100"
+            highlight ? "bg-white border-2 border-red-100" : "bg-white border-gray-100"
         )}>
             <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", colors[color])}>
                 <Icon className="h-6 w-6 lg:h-7 lg:w-7" />
             </div>
             <div>
-                <div className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">{value}</div>
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">{label}</h3>
+                <div className="flex items-baseline gap-2">
+                    <div className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">{value}</div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lotes</div>
+                </div>
+                {hectares !== undefined && (
+                    <div className="text-sm font-bold text-gray-600 mt-0.5">
+                        {hectares.toLocaleString()} <span className="text-[10px] uppercase opacity-60">Ha Totales</span>
+                    </div>
+                )}
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{label}</h3>
             </div>
         </div>
     );

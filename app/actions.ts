@@ -526,14 +526,29 @@ export async function getDashboardStats() {
 
     const establishmentCount = await prisma.establishment.count({ where: { organization_id: orgId } });
     const lotCount = await prisma.lot.count({ where: { establishment: { organization_id: orgId } } });
-    const assessmentCount = await prisma.assessment.count({ where: { campaign_id: campaignId } });
 
-    const applyCount = await prisma.assessment.count({
-        where: { campaign_id: campaignId, recommendation_result: "Aplicar" }
+    // Get all assessments for current campaign with lot hectares
+    const assessments = await prisma.assessment.findMany({
+        where: { campaign_id: campaignId },
+        include: { lot: true }
     });
-    const noApplyCount = await prisma.assessment.count({
-        where: { campaign_id: campaignId, recommendation_result: "No Aplicar" }
-    });
+
+    const assessmentCount = assessments.length;
+
+    const applyCount = assessments.filter(a => a.recommendation_result === "Aplicar").length;
+    const hectaresApply = assessments
+        .filter(a => a.recommendation_result === "Aplicar")
+        .reduce((sum, a) => sum + (a.lot?.hectares || 0), 0);
+
+    const noApplyCount = assessments.filter(a => a.recommendation_result === "No Aplicar").length;
+    const hectaresNoApply = assessments
+        .filter(a => a.recommendation_result === "No Aplicar")
+        .reduce((sum, a) => sum + (a.lot?.hectares || 0), 0);
+
+    const monitorCount = assessments.filter(a => a.recommendation_result === "Monitorear y decidir con pronóstico").length;
+    const hectaresMonitor = assessments
+        .filter(a => a.recommendation_result === "Monitorear y decidir con pronóstico")
+        .reduce((sum, a) => sum + (a.lot?.hectares || 0), 0);
 
     const recentAssessments = await prisma.assessment.findMany({
         where: { campaign_id: campaignId },
@@ -548,7 +563,11 @@ export async function getDashboardStats() {
         lotCount,
         assessmentCount,
         applyCount,
+        hectaresApply,
         noApplyCount,
+        hectaresNoApply,
+        monitorCount,
+        hectaresMonitor,
         recentAssessments
     };
 }
@@ -645,6 +664,19 @@ export async function getEstablishmentDetails(id: string) {
         where: { id },
         include: { lots: { orderBy: { created_at: 'desc' } } }
     });
+}
+
+export async function updateEstablishment(id: string, formData: FormData) {
+    const name = formData.get("name") as string;
+    const location = formData.get("location") as string;
+
+    await prisma.establishment.update({
+        where: { id },
+        data: { name, location }
+    });
+
+    revalidatePath("/establishments");
+    revalidatePath(`/establishments/${id}`);
 }
 
 // --- Lots ---

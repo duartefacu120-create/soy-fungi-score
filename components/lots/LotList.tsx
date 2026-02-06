@@ -31,6 +31,12 @@ export default function LotList({ lots: initialLots }: { lots: Lot[] }) {
         formData.append("hectares", editHectares);
 
         await updateLot(id, formData);
+
+        // Update local state for immediate reflected changes
+        setLots(prev => prev.map(l =>
+            l.id === id ? { ...l, name: editName, hectares: parseFloat(editHectares) || 0 } : l
+        ));
+
         setEditingId(null);
         router.refresh();
     };
